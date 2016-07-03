@@ -22,6 +22,7 @@
     "node": ">=0.6.11 <=0.7.0 || >=0.7.3"
   },
   "dependencies": {
+    "http-equiv-refresh": "^1.0.0",
     "hyperquext": "latest",
     "hyperquext-cheerio": "latest"
   }

@@ -1,5 +1,6 @@
 var hq = require('hyperquext');
 var url = require('url');
+var parseMetaRefresh = require('http-equiv-refresh');
 var attachCheerioToResponse = require('hyperquext-cheerio'),
   redirector = hq.devcorators.redirector,
   consumeForcedOption = hq.devcorators.consumeForcedOption,
@@ -7,9 +8,6 @@ var attachCheerioToResponse = require('hyperquext-cheerio'),
   getResponseFromClientRequest = hq.helpers.getResponseFromClientRequest;
 
 module.exports = function hyperquextMeDirect(hyperquext) {
-  var expression = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
-  var regex = new RegExp(expression);
-
   return redirector(function (uri, opts, cb) {
     if (!opts.maxRedirects) return opts;
 
@@ -21,11 +19,13 @@ module.exports = function hyperquextMeDirect(hyperquext) {
         var $ = res.cheerio;
         var redirectUrl;
         $('meta[http-equiv]').each( function () {
-          redirectUrl = $(this).attr('http-equiv').toLowerCase() == 'refresh' &&
-            $(this).attr('content') && $(this).attr('content').match(regex);
+          var el = $(this);
+          if (el.attr('http-equiv').toLowerCase() !== 'refresh') {
+            return;
+          }
+          redirectUrl = parseMetaRefresh(el.attr('content')).url;
         })
 
-        redirectUrl = redirectUrl && redirectUrl.length ? redirectUrl[0] : false;
         if (redirectUrl) {
           finalRequest.res['$redirect'] = {
             statusCode: 'meta-refresh',
